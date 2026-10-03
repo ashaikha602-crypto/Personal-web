@@ -145,9 +145,12 @@ h2 { font-size: clamp(52px, 7.5vw, 96px); line-height: 1; }
 
 /* principles */
 #principles .inner { max-width: 1100px; gap: 30px; }
+.principles-grid { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 24px; align-items: center; }
+.carving { margin: 0; }
+.carving img { display: block; height: min(56vh, 440px); width: auto; max-width: 100%; border: 1px solid var(--line); box-shadow: 0 22px 40px -26px rgba(10,15,30,.7); }
 .verses { display: grid; gap: 22px; justify-items: center; }
 .verses figure { margin: 0; max-width: 100%; }
-.verses img { display: block; width: min(640px, 100%); height: auto; border: 1px solid var(--line); box-shadow: 0 22px 40px -26px rgba(10,15,30,.7); }
+.verses img { display: block; width: min(600px, 100%); height: auto; border: 1px solid var(--line); box-shadow: 0 22px 40px -26px rgba(10,15,30,.7); }
 
 /* coding */
 .course { display: grid; gap: 4px; }
@@ -197,6 +200,10 @@ h2 { font-size: clamp(52px, 7.5vw, 96px); line-height: 1; }
   body { font-size: 17px; }
   .chapter { padding-block: 88px 120px; align-items: flex-start; }
   .split { grid-template-columns: 1fr; }
+  .principles-grid { grid-template-columns: 1fr; gap: 14px; }
+  .carving { justify-self: center; }
+  .carving img { height: 210px; width: auto; }
+  .verses { gap: 14px; }
   .opinion-grid { grid-template-columns: 1fr; row-gap: 28px; }
   .pics { gap: 10px; }
   .pics .solo img { max-height: 420px; }
@@ -434,9 +441,12 @@ h2 { font-size: clamp(52px, 7.5vw, 96px); line-height: 1; }
   <section class="chapter wide" id="principles">
     <div class="inner">
       <h2>Principles I Live By</h2>
+      <div class="principles-grid">
+        <figure class="carving"><img src="img/principle-carving.jpg" alt="Carved Arabic calligraphy and arabesque on an old stone wall" width="1320" height="1283"></figure>
       <div class="verses">
         <figure><img src="img/principle-isra.jpg" alt="سورة الإسراء ٥٣: وقل لعبادي يقولوا التي هي أحسن" width="1335" height="670"></figure>
         <figure><img src="img/principle-husna.jpg" alt="وقولوا للناس حسنا" width="908" height="179"></figure>
+      </div>
       </div>
     </div>
   </section>
