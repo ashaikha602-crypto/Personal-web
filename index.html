@@ -139,6 +139,8 @@ h2 { font-size: clamp(52px, 7.5vw, 96px); line-height: 1; }
 .opinion-grid { grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.5fr); align-items: center; column-gap: clamp(32px, 5vw, 64px); max-width: 1200px !important; }
 .pics { display: flex; gap: 18px; align-items: flex-end; min-width: 0; }
 .pics figure { margin: 0; min-width: 0; flex: var(--ar) 1 0; }
+.pics .solo { flex: 0 1 auto; margin-inline: auto; }
+.pics .solo img { width: auto; max-height: min(64vh, 520px); }
 .pics img { display: block; width: 100%; height: auto; border: 1px solid var(--line); box-shadow: 0 22px 40px -26px rgba(10,15,30,.7); }
 
 /* coding */
@@ -191,6 +193,7 @@ h2 { font-size: clamp(52px, 7.5vw, 96px); line-height: 1; }
   .split { grid-template-columns: 1fr; }
   .opinion-grid { grid-template-columns: 1fr; row-gap: 28px; }
   .pics { gap: 10px; }
+  .pics .solo img { max-height: 420px; }
   .strip { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
   .strip .ph { height: 190px; }
   .shelf { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px 10px; }
@@ -408,8 +411,17 @@ h2 { font-size: clamp(52px, 7.5vw, 96px); line-height: 1; }
   </section>
 
   <section class="chapter wide" id="peeves">
-    <div class="inner">
-      <h2>My Pet Peeves</h2>
+    <div class="inner opinion-grid">
+      <div class="aims-text">
+        <h2>My Pet Peeves</h2>
+        <ul class="items">
+          <li><span class="t">Time</span></li>
+          <li><span class="t">Disciplines</span></li>
+        </ul>
+      </div>
+      <div class="pics">
+        <figure class="solo" style="--ar: 0.636"><img src="img/peeves-bigben.jpg" alt="Big Ben lit up at dusk with a crescent moon" width="1165" height="1831"></figure>
+      </div>
     </div>
   </section>
 
@@ -734,7 +746,7 @@ h2 { font-size: clamp(52px, 7.5vw, 96px); line-height: 1; }
     mat.uniforms.uTime.value = reduced ? 0 : t;
     // wave motion is strongest on the waveform chapter
     // fade the particles behind the photos on the Aims and Podcasts chapters
-    const near = Math.max(0, 1 - Math.abs(secF - 2), 1 - Math.abs(secF - 3), 1 - Math.abs(secF - 4), 1 - Math.abs(secF - 5), 1 - Math.abs(secF - 6), 1 - Math.abs(secF - 7), 1 - Math.abs(secF - 8));
+    const near = Math.max(0, 1 - Math.abs(secF - 2), 1 - Math.abs(secF - 3), 1 - Math.abs(secF - 4), 1 - Math.abs(secF - 5), 1 - Math.abs(secF - 6), 1 - Math.abs(secF - 7), 1 - Math.abs(secF - 8), 1 - Math.abs(secF - 9));
     mat.uniforms.uOpacity.value = baseOpacity * (1 - 0.6 * near);
     mat.uniforms.uWave.value = Math.max(0, 1 - Math.abs(secF - 1) * 1.4, 0.8 * (1 - Math.abs(secF - 4) * 1.4));
     if (!reduced) ang += dt * 0.12;
