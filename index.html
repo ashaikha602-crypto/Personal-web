@@ -20,7 +20,7 @@
   --line: rgba(22,33,62,.22);
   --surface: rgba(244,239,228,.72);
   --particle: #1B2B5C;
-  --wash-0: #F4EFE4; --wash-1: #F2E4DC; --wash-2: #E0E9F1; --wash-3: #EBE5F1; --wash-4: #E6E4EE; --wash-5: #F1E5D3; --wash-6: #EFE5DD; --wash-7: #E2EAE7; --wash-8: #F4EFE4;
+  --wash-0: #F4EFE4; --wash-1: #F2E4DC; --wash-2: #E0E9F1; --wash-3: #EBE5F1; --wash-4: #E6E4EE; --wash-5: #F1E5D3; --wash-6: #EFE5DD; --wash-7: #E2EAE7; --wash-8: #F0E6E0; --wash-9: #E6E8EF; --wash-10: #F4EFE4;
   --font-display: "Cormorant Garamond", "Iowan Old Style", Georgia, serif;
   --font-body: "Hanken Grotesk", "Segoe UI", system-ui, sans-serif;
   --font-ar: "Amiri", "Geeza Pro", "Noto Naskh Arabic", serif;
@@ -29,14 +29,14 @@
   :root:not([data-theme="light"]) {
     --bg: #0A0F1E; --ink: #EEF1F8; --text: #DCE2EF; --muted: #AEB7CC; --accent: #D9BC78;
     --line: rgba(220,226,239,.22); --surface: rgba(10,15,30,.6); --particle: #BFD3FF;
-    --wash-0: #0A0F1E; --wash-1: #130F22; --wash-2: #0A1727; --wash-3: #150E1E; --wash-4: #080B1C; --wash-5: #150F08; --wash-6: #130C0B; --wash-7: #06151A; --wash-8: #0A0F1E;
+    --wash-0: #0A0F1E; --wash-1: #130F22; --wash-2: #0A1727; --wash-3: #150E1E; --wash-4: #080B1C; --wash-5: #150F08; --wash-6: #130C0B; --wash-7: #06151A; --wash-8: #170C0E; --wash-9: #0B0E1A; --wash-10: #0A0F1E;
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
   --bg: #0A0F1E; --ink: #EEF1F8; --text: #DCE2EF; --muted: #AEB7CC; --accent: #D9BC78;
   --line: rgba(220,226,239,.22); --surface: rgba(10,15,30,.6); --particle: #BFD3FF;
-  --wash-0: #0A0F1E; --wash-1: #130F22; --wash-2: #0A1727; --wash-3: #150E1E; --wash-4: #080B1C; --wash-5: #150F08; --wash-6: #130C0B; --wash-7: #06151A; --wash-8: #0A0F1E;
+  --wash-0: #0A0F1E; --wash-1: #130F22; --wash-2: #0A1727; --wash-3: #150E1E; --wash-4: #080B1C; --wash-5: #150F08; --wash-6: #130C0B; --wash-7: #06151A; --wash-8: #170C0E; --wash-9: #0B0E1A; --wash-10: #0A0F1E;
   color-scheme: dark;
 }
 
@@ -383,6 +383,20 @@ h2 { font-size: clamp(52px, 7.5vw, 96px); line-height: 1; }
     </div>
   </section>
 
+  <section class="chapter wide" id="unpopular">
+    <div class="inner">
+      <div class="eyebrow">About me</div>
+      <h2>Unpopular Opinion</h2>
+    </div>
+  </section>
+
+  <section class="chapter wide" id="peeves">
+    <div class="inner">
+      <div class="eyebrow">About me</div>
+      <h2>My Pet Peeves</h2>
+    </div>
+  </section>
+
   <section class="chapter" id="thanks">
     <div class="inner">
       <div class="thanks"><h2>Thank you</h2></div>
@@ -593,6 +607,25 @@ h2 { font-size: clamp(52px, 7.5vw, 96px); line-height: 1; }
     }
     return a;
   }
+  function twistedRing() { // a twisted loop: the other side of an argument
+    const a = new Float32Array(N * 3);
+    for (let i = 0; i < N; i++) {
+      const t = rnd() * Math.PI * 2, u = rnd() * Math.PI * 2;
+      const R = 2 + 0.55 * Math.cos(3 * t), r = 0.28;
+      const x = (R + r * Math.cos(u)) * Math.cos(2 * t), y = (R + r * Math.cos(u)) * Math.sin(2 * t), z = 0.8 * Math.sin(3 * t) + r * Math.sin(u);
+      a.set([x * 0.75, y * 0.75, z], i * 3);
+    }
+    return a;
+  }
+  function spikes() { // a prickly ball
+    const a = new Float32Array(N * 3), dirs = [];
+    for (let k = 0; k < 40; k++) { const th = rnd() * Math.PI * 2, ph = Math.acos(2 * rnd() - 1); dirs.push([Math.sin(ph) * Math.cos(th), Math.cos(ph), Math.sin(ph) * Math.sin(th)]); }
+    for (let i = 0; i < N; i++) {
+      if (i % 2) { const d = dirs[i % 40], r = 1.1 + rnd() * 1.4; a.set([d[0] * r, d[1] * r, d[2] * r], i * 3); }
+      else { const th = rnd() * Math.PI * 2, ph = Math.acos(2 * rnd() - 1), r = 1.1; a.set([r * Math.sin(ph) * Math.cos(th), r * Math.cos(ph), r * Math.sin(ph) * Math.sin(th)], i * 3); }
+    }
+    return a;
+  }
   function lattice() { // a cube of points, like a grid of code
     const a = new Float32Array(N * 3), n = 9, step = 0.5;
     for (let i = 0; i < N; i++) {
@@ -604,8 +637,8 @@ h2 { font-size: clamp(52px, 7.5vw, 96px); line-height: 1; }
     }
     return a;
   }
-  const shapes = [voiceSphere(), waveform(), globe(), broadcast(), nightSea(), dunes(), openBook(), lattice(), galaxy()];
-  const rot = [[0.25, 0], [0.35, -0.35], [0.35, 0], [0.15, -0.5], [0.45, 0], [0.35, 0], [-0.5, 0], [0.5, 0.6], [0.9, 0]]; // per-form tilt (x, y)
+  const shapes = [voiceSphere(), waveform(), globe(), broadcast(), nightSea(), dunes(), openBook(), lattice(), twistedRing(), spikes(), galaxy()];
+  const rot = [[0.25, 0], [0.35, -0.35], [0.35, 0], [0.15, -0.5], [0.45, 0], [0.35, 0], [-0.5, 0], [0.5, 0.6], [0.4, 0.2], [0.2, 0.3], [0.9, 0]]; // per-form tilt (x, y)
 
   const geo = new THREE.BufferGeometry();
   const from = new THREE.BufferAttribute(shapes[0].slice(), 3);
