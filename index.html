@@ -1,0 +1,707 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Shaikha Al-Khaldi">
+<style>*,*::before,*::after{box-sizing:border-box}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Shaikha Al-Khaldi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Hanken+Grotesk:wght@400;500;600;700&family=Amiri:wght@400;700&family=Gentium+Book+Plus:wght@400&display=swap">
+<style>
+/* Layout: full-screen chapters you scroll through; text on the left, a 3D particle form on the right that reshapes per chapter. Ink on ivory by default, starfield at night. */
+:root {
+  --bg: #F4EFE4;          /* ivory paper */
+  --ink: #16213E;         /* deep navy ink: headings + particles */
+  --text: #26304D;        /* body text */
+  --muted: #4B536B;       /* descriptions */
+  --accent: #85661C;      /* old gold: labels + rules */
+  --line: rgba(22,33,62,.22);
+  --surface: rgba(244,239,228,.72);
+  --particle: #1B2B5C;
+  --wash-0: #F4EFE4; --wash-1: #F2E4DC; --wash-2: #E0E9F1; --wash-3: #EBE5F1; --wash-4: #E6E4EE; --wash-5: #F1E5D3; --wash-6: #EFE5DD; --wash-7: #E2EAE7; --wash-8: #F4EFE4;
+  --font-display: "Cormorant Garamond", "Iowan Old Style", Georgia, serif;
+  --font-body: "Hanken Grotesk", "Segoe UI", system-ui, sans-serif;
+  --font-ar: "Amiri", "Geeza Pro", "Noto Naskh Arabic", serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0A0F1E; --ink: #EEF1F8; --text: #DCE2EF; --muted: #AEB7CC; --accent: #D9BC78;
+    --line: rgba(220,226,239,.22); --surface: rgba(10,15,30,.6); --particle: #BFD3FF;
+    --wash-0: #0A0F1E; --wash-1: #130F22; --wash-2: #0A1727; --wash-3: #150E1E; --wash-4: #080B1C; --wash-5: #150F08; --wash-6: #130C0B; --wash-7: #06151A; --wash-8: #0A0F1E;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0A0F1E; --ink: #EEF1F8; --text: #DCE2EF; --muted: #AEB7CC; --accent: #D9BC78;
+  --line: rgba(220,226,239,.22); --surface: rgba(10,15,30,.6); --particle: #BFD3FF;
+  --wash-0: #0A0F1E; --wash-1: #130F22; --wash-2: #0A1727; --wash-3: #150E1E; --wash-4: #080B1C; --wash-5: #150F08; --wash-6: #130C0B; --wash-7: #06151A; --wash-8: #0A0F1E;
+  color-scheme: dark;
+}
+
+html { scroll-snap-type: y proximity; scroll-behavior: smooth; }
+body { background: var(--bg); color: var(--text); font-family: var(--font-body); font-size: 18px; line-height: 1.55; -webkit-font-smoothing: antialiased; }
+#wash { position: fixed; inset: 0; z-index: 0; background: var(--bg); }
+#stage { position: fixed; inset: 0; z-index: 1; width: 100%; height: 100%; display: block; pointer-events: none; }
+
+/* top progress + controls */
+.progress { position: fixed; top: 0; left: 0; right: 0; z-index: 5; height: 3px; padding-top: env(safe-area-inset-top, 0px); pointer-events: none; }
+.progress i { display: block; height: 3px; width: 0; background: var(--accent); transition: width .2s linear; }
+.theme-btn { position: fixed; z-index: 6; top: calc(env(safe-area-inset-top, 0px) + 18px); right: 20px; display: inline-flex; align-items: center; gap: 8px; padding: 9px 14px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: 600 12px/1 var(--font-body); letter-spacing: .14em; text-transform: uppercase; border-radius: 999px; cursor: pointer; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+.theme-btn svg { width: 16px; height: 16px; }
+.nav { position: fixed; z-index: 6; right: 20px; bottom: calc(env(safe-area-inset-bottom, 0px) + 20px); display: grid; justify-items: end; gap: 10px; }
+.nav .btns { display: flex; gap: 8px; }
+.nav button { width: 46px; height: 46px; display: grid; place-items: center; border: 1px solid var(--ink); background: var(--surface); color: var(--ink); cursor: pointer; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+.nav button:disabled { opacity: .3; cursor: default; }
+.nav button svg { width: 18px; height: 18px; }
+.count { font: 700 13px/1 var(--font-body); letter-spacing: .2em; color: var(--ink); font-variant-numeric: tabular-nums; }
+.count span { color: var(--muted); font-weight: 500; }
+button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+/* chapters */
+main { position: relative; z-index: 2; }
+.chapter { min-height: 100vh; min-height: 100svh; scroll-snap-align: start; display: flex; align-items: center; padding-inline: clamp(20px, 8vw, 120px); padding-block: 96px; box-sizing: border-box; }
+.inner { width: 100%; max-width: 640px; min-width: 0; display: grid; gap: 28px; }
+.wide .inner { max-width: 1080px; }
+.eyebrow { font: 700 13px/1 var(--font-body); letter-spacing: .28em; text-transform: uppercase; color: var(--accent); }
+h1, h2 { font-family: var(--font-display); font-weight: 500; color: var(--ink); margin: 0; text-wrap: balance; letter-spacing: -.01em; }
+h1 { font-size: clamp(64px, 11vw, 148px); line-height: .92; }
+h2 { font-size: clamp(52px, 7.5vw, 96px); line-height: 1; }
+.rule { width: 96px; height: 2px; background: var(--accent); border: 0; margin: 0; }
+.tagline { font-size: clamp(18px, 1.6vw, 22px); color: var(--muted); font-weight: 500; max-width: 34ch; margin: 0; }
+.tagline b { color: var(--ink); font-weight: 600; }
+.hint { display: inline-flex; align-items: center; gap: 10px; font: 600 12px/1 var(--font-body); letter-spacing: .24em; text-transform: uppercase; color: var(--muted); }
+.hint::before { content: ""; width: 1px; height: 36px; background: var(--muted); animation: drip 2.2s ease-in-out infinite; transform-origin: top; }
+@keyframes drip { 0%,100% { transform: scaleY(.3); } 50% { transform: scaleY(1); } }
+
+.group { display: grid; gap: 18px; }
+.group + .group { margin-top: 10px; }
+.items { list-style: none; margin: 0; padding: 0; display: grid; gap: 18px; }
+.items li { display: grid; grid-template-columns: 22px 1fr; column-gap: 12px; }
+.items li::before { content: ""; width: 16px; height: 2px; background: var(--ink); margin-top: .78em; }
+.items .t { font-size: clamp(24px, 2.4vw, 30px); font-weight: 600; color: var(--ink); line-height: 1.2; }
+.items .d { grid-column: 2; font-size: 18px; color: var(--muted); font-weight: 500; margin-top: 4px; max-width: 52ch; }
+.items .k { grid-column: 2; font: 700 12px/1 var(--font-body); letter-spacing: .24em; text-transform: uppercase; color: var(--accent); margin-top: 8px; }
+
+.items .ipa { grid-column: 2; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 16px; margin-top: 4px; }
+.items .ipa [lang="und-fonipa"] { font-family: "Gentium Book Plus", "Charis SIL", "Doulos SIL", "Noto Serif", serif; font-size: clamp(26px, 2.6vw, 34px); color: var(--ink); letter-spacing: .02em; }
+/* aims */
+.aims-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); align-items: center; column-gap: clamp(32px, 5vw, 72px); max-width: 1180px !important; }
+.aims-text { display: grid; gap: 28px; min-width: 0; }
+.items li[data-photo] { cursor: default; transition: transform .25s ease; }
+.items li[data-photo]:hover, .items li[data-photo]:focus-visible, .items li.on { transform: translateX(6px); outline: none; }
+.items li.on::before { background: var(--accent); width: 22px; }
+.gallery { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: 1fr 1fr; gap: 14px; height: clamp(380px, 64vh, 580px); min-width: 0; perspective: 1000px; }
+.ph { position: relative; margin: 0; overflow: hidden; min-width: 0; border: 1px solid var(--line); box-shadow: 0 24px 44px -28px rgba(10,15,30,.75); transition: transform .3s ease, box-shadow .3s ease, filter .3s ease; }
+.ph-ga { grid-row: span 2; }
+.ph img { display: block; width: 100%; height: 100%; max-width: 100%; object-fit: cover; }
+.ph-ga img { object-position: 50% 40%; }
+.ph figcaption { position: absolute; left: 0; right: 0; bottom: 0; padding: 26px 12px 10px; font: 600 12px/1.3 var(--font-body); letter-spacing: .08em; color: #FBF6EA; background: linear-gradient(transparent, rgba(8,12,24,.78)); }
+.gallery.focus .ph { filter: grayscale(.85) brightness(.82); }
+.gallery.focus .ph.on { filter: none; box-shadow: 0 0 0 2px var(--accent), 0 28px 50px -26px rgba(10,15,30,.8); }
+
+/* poetry */
+#poetry { padding-block: 64px; }
+#poetry .inner { gap: 22px; }
+#poetry h2 { font-size: clamp(46px, 6vw, 80px); }
+#poetry .thanks .ar { font-size: clamp(36px, 4.6vw, 64px); }
+.poems { display: grid; gap: 18px; }
+.poem { display: grid; gap: 6px; padding-block: 0 18px; border-bottom: 1px solid var(--line); }
+.poem:last-child { border-bottom: 0; padding-block-end: 0; }
+.poet { direction: rtl; display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 16px; }
+.poet .ar { font-family: var(--font-ar); font-size: 22px; font-weight: 700; color: var(--accent); }
+.poet .en { font: 700 12px/1.4 var(--font-body); letter-spacing: .2em; text-transform: uppercase; color: var(--muted); }
+.verse { margin: 0; direction: rtl; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 3em; font-family: var(--font-ar); font-size: clamp(22px, 2.2vw, 30px); line-height: 1.6; color: var(--ink); }
+.verse span:first-child { text-align: right; }
+.verse span:last-child { text-align: left; }
+.badr { direction: rtl; grid-template-columns: 124px minmax(0, 1fr); align-items: center; column-gap: 22px; }
+.badr img { width: 124px; height: 124px; border-radius: 50%; object-fit: cover; box-shadow: 0 0 0 1px var(--line), 0 12px 24px -14px rgba(10,15,30,.7); }
+.badr-text { display: grid; gap: 6px; min-width: 0; }
+.nabati { margin: 0; display: flex; flex-wrap: wrap; gap: 0 1.4em; font-family: var(--font-ar); font-size: clamp(22px, 2.2vw, 30px); line-height: 1.6; color: var(--ink); }
+
+/* desert */
+#desert .inner { max-width: 1240px; gap: 26px; }
+.strip { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 18px; align-items: end; perspective: 1200px; }
+.strip .ph { border: 0; box-shadow: none; overflow: visible; display: flex; justify-content: center; align-items: flex-end; height: clamp(220px, 46vh, 380px); }
+.strip .ph img { width: auto; height: auto; max-width: 100%; max-height: 100%; object-fit: contain; border: 1px solid var(--line); box-shadow: 0 22px 40px -26px rgba(10,15,30,.7); }
+
+/* books */
+#books .inner { max-width: 1240px; gap: 26px; }
+.shelf { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(0, 1.6fr) minmax(0, 1fr); gap: 18px; }
+.book { margin: 0; display: grid; grid-template-rows: auto auto; gap: 12px; min-width: 0; }
+.book .cover { height: clamp(200px, 38vh, 320px); display: flex; justify-content: center; align-items: flex-end; }
+.book img { display: block; width: auto; height: auto; max-width: 100%; max-height: 100%; box-shadow: 0 24px 40px -26px rgba(10,15,30,.7), 0 0 0 1px var(--line); }
+.book figcaption { text-align: center; font-size: 17px; font-weight: 600; color: var(--ink); }
+.book figcaption[lang="ar"] { font-family: var(--font-ar); font-size: 20px; font-weight: 700; }
+
+/* coding */
+.course { display: grid; gap: 4px; }
+.course .nm { font-size: clamp(22px, 2.2vw, 28px); font-weight: 600; color: var(--ink); }
+.course .by { font: 700 12px/1.4 var(--font-body); letter-spacing: .22em; text-transform: uppercase; color: var(--accent); }
+.skills { list-style: none; margin: 0; padding: 0; display: grid; gap: 22px; }
+.skill { display: grid; grid-template-columns: 44px minmax(0, 1fr); column-gap: 14px; row-gap: 10px; }
+.skill .no { font: 700 13px/2.1 var(--font-body); letter-spacing: .14em; color: var(--accent); font-variant-numeric: tabular-nums; }
+.skill .t { font-size: clamp(22px, 2.2vw, 28px); font-weight: 600; color: var(--ink); line-height: 1.25; }
+.chips { grid-column: 2; display: flex; flex-wrap: wrap; gap: 8px; }
+.chips span { padding: 6px 12px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font-size: 15px; font-weight: 600; }
+
+/* certificate */
+.cert-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; column-gap: clamp(32px, 5vw, 72px); max-width: 1120px !important; }
+.cert-text { display: grid; gap: 22px; min-width: 0; }
+.cert { margin: 0; justify-self: center; perspective: 1100px; min-width: 0; }
+.cert .frame { max-width: 100%; transition: transform .3s ease; transform: rotateY(-6deg) rotateX(2deg); box-shadow: 0 40px 60px -30px rgba(10,15,30,.65), 0 0 0 1px var(--line); }
+.cert img { display: block; width: auto; max-width: 100%; height: auto; max-height: min(74vh, 620px); }
+
+/* podcasts */
+#podcasts { padding-block: 72px; }
+#podcasts .inner { gap: 20px; }
+#podcasts h2 { font-size: clamp(48px, 6vw, 80px); }
+.banner { margin: 0; display: grid; gap: 10px; }
+.banner img { display: block; width: 100%; height: auto; max-width: 100%; aspect-ratio: 1191 / 299; max-height: 230px; object-fit: cover; border: 1px solid var(--line); box-shadow: 0 18px 40px -24px rgba(10,15,30,.55); }
+.banner figcaption { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-size: 15px; color: var(--muted); font-weight: 500; }
+.banner figcaption .ar { font-family: var(--font-ar); font-size: 19px; color: var(--ink); }
+.split { display: grid; grid-template-columns: minmax(0, 420px) minmax(0, 1fr); gap: 28px 56px; align-items: start; }
+.col { display: grid; gap: 16px; min-width: 0; }
+.channels { display: grid; gap: 14px; }
+.channel { display: grid; grid-template-columns: 84px minmax(0, 1fr); align-items: center; gap: 18px; padding: 12px 16px 12px 12px; border: 1px solid var(--line); background: var(--surface); }
+.channel img { width: 84px; height: 84px; border-radius: 50%; box-shadow: 0 0 0 1px var(--line), 0 10px 22px -12px rgba(10,15,30,.6); }
+.channel .nm { font-family: var(--font-ar); font-size: 24px; line-height: 1.3; color: var(--ink); direction: rtl; text-align: left; unicode-bidi: plaintext; }
+.channel .hd { font-size: 15px; font-weight: 600; color: var(--muted); letter-spacing: .02em; }
+.voices { display: grid; grid-template-columns: repeat(2, minmax(0, 216px)); gap: 28px; }
+.voice { margin: 0; display: grid; gap: 10px; min-width: 0; perspective: 900px; }
+.voice .frame { aspect-ratio: 4 / 5; max-width: 100%; max-height: 270px; overflow: hidden; border: 1px solid var(--line); box-shadow: 0 22px 40px -26px rgba(10,15,30,.7); transform-style: preserve-3d; transition: transform .25s ease, box-shadow .25s ease; }
+.voice img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 20%; }
+.voice figcaption { display: grid; gap: 2px; }
+.voice .who { font-size: 18px; font-weight: 600; color: var(--ink); line-height: 1.25; }
+.voice .ttl { font: 700 11px/1.4 var(--font-body); letter-spacing: .22em; text-transform: uppercase; color: var(--accent); }
+
+.thanks { display: flex; flex-wrap: wrap; align-items: baseline; gap: 12px 28px; }
+.thanks .ar { font-family: var(--font-ar); font-size: clamp(44px, 6vw, 80px); color: var(--accent); }
+
+@media (max-width: 760px) {
+  body { font-size: 17px; }
+  .chapter { padding-block: 88px 120px; align-items: flex-start; }
+  .split { grid-template-columns: 1fr; }
+  .strip { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+  .strip .ph { height: 190px; }
+  .shelf { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px 10px; }
+  .book .cover { height: 150px; }
+  .book figcaption, .book figcaption[lang="ar"] { font-size: 13px; }
+  .cert-grid { grid-template-columns: 1fr; row-gap: 32px; }
+  .cert .frame { transform: none; }
+  .verse { grid-template-columns: 1fr; }
+  .badr { grid-template-columns: 84px minmax(0, 1fr); column-gap: 14px; }
+  .badr img { width: 84px; height: 84px; }
+  .verse span:last-child { text-align: left; padding-inline-end: 2em; }
+  .aims-grid { grid-template-columns: 1fr; row-gap: 32px; }
+  .gallery { height: auto; grid-template-rows: 200px 200px; }
+  .ph figcaption { font-size: 11px; letter-spacing: .03em; padding: 22px 8px 8px; }
+  .voices { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+  .voice .frame { max-height: none; }
+  .channel .nm { font-size: 21px; }
+  .theme-btn .lbl { display: none; }
+  .theme-btn { padding: 10px; }
+  .nav { right: 14px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .hint::before { animation: none; }
+}
+</style>
+</head>
+<body>
+
+
+<div id="wash" aria-hidden="true"></div>
+<canvas id="stage" aria-hidden="true"></canvas>
+<div class="progress" aria-hidden="true"><i id="bar"></i></div>
+
+<button class="theme-btn" id="themeBtn" type="button" aria-label="Switch light or dark">
+  <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></svg>
+  <span class="lbl" id="themeLbl">Dark</span>
+</button>
+
+<nav class="nav" aria-label="Chapters">
+  <div class="btns">
+    <button id="prev" type="button" aria-label="Previous section"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 19V5M6 11l6-6 6 6"/></svg></button>
+    <button id="next" type="button" aria-label="Next section"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 5v14M6 13l6 6 6-6"/></svg></button>
+  </div>
+  <div class="count"><b id="cur">01</b> <span>/ <span id="tot">06</span></span></div>
+</nav>
+
+<main>
+  <section class="chapter" id="home">
+    <div class="inner">
+      <h1>Shaikha<br>Al-Khaldi</h1>
+      <div class="hint">Scroll</div>
+    </div>
+  </section>
+
+  <section class="chapter" id="study">
+    <div class="inner">
+      <div class="eyebrow">02</div>
+      <h2>What I Study</h2>
+      <hr class="rule">
+      <div class="group">
+        <div class="eyebrow">Degree</div>
+        <ul class="items">
+          <li><span class="t">Linguistics</span><span class="k">Major</span></li>
+          <li><span class="t">Translation Studies</span><span class="k">Minor</span></li>
+        </ul>
+      </div>
+      <div class="group">
+        <div class="eyebrow">Where my interest sits</div>
+        <ul class="items">
+          <li><span class="t">Phonetics</span><span class="d">How speech sounds are produced, transmitted and perceived.</span></li>
+          <li><span class="t">Phonology</span><span class="d">How those sounds are organised into a system within a language.</span></li>
+          <li><span class="t">Generative Phonology</span><span class="d">The rules underlying that system, and what they predict.</span></li>
+          <li><span class="t">IPA</span><span class="ipa"><span lang="und-fonipa">[aɪ ˈhoʊp ðɪs ˈfɪnɪʃɪz əz ˈsuːn əz ˈpʰɑsəbl̩]</span></span></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter wide" id="aims">
+    <div class="inner aims-grid">
+      <div class="aims-text">
+        <div class="eyebrow">03</div>
+        <h2>My Aims</h2>
+        <hr class="rule">
+        <div class="group">
+          <div class="eyebrow">The goal</div>
+          <ul class="items">
+            <li data-photo="geneva" tabindex="0"><span class="t">Conference Interpreter</span><span class="d">The career I am working toward.</span></li>
+            <li data-photo="booth" tabindex="0"><span class="t">Simultaneous Interpreting</span><span class="d">Working from the booth, in real time, as the speaker speaks.</span></li>
+            <li data-photo="ga" tabindex="0"><span class="t">The United Nations</span><span class="d">Where I want that work to take place.</span></li>
+          </ul>
+        </div>
+      </div>
+      <div class="gallery">
+        <figure class="ph ph-ga tilt" data-photo="ga"><img src="img/un-general-assembly.jpg" alt="The UN General Assembly Hall in New York, with the UN emblem on the gold wall" width="900" height="1270"><figcaption>General Assembly Hall · New York</figcaption></figure>
+        <figure class="ph tilt" data-photo="booth"><img src="img/interpreter-booth.jpg" alt="An interpreter in the booth overlooking the Security Council chamber" width="960" height="1091"><figcaption>Interpreter's booth · Security Council</figcaption></figure>
+        <figure class="ph tilt" data-photo="geneva"><img src="img/un-geneva-desk.jpg" alt="A delegate desk at the UN in Geneva with a microphone, the UN emblem and session papers" width="1000" height="886"><figcaption>Human Rights Council · Geneva</figcaption></figure>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter wide" id="podcasts">
+    <div class="inner">
+      <div class="eyebrow">Things I like</div>
+      <h2>Podcasts</h2>
+      <figure class="banner">
+        <img src="img/thmanyah-banner.jpg" alt="Thmanyah banner: two hosts facing each other across a studio, with the words محتوى أصيل صنع بإحسان" width="2382" height="598">
+        <figcaption><span class="ar" lang="ar">إذاعة ثمانية</span><span>“Original content, made with care”</span></figcaption>
+      </figure>
+      <div class="split">
+        <div class="col">
+          <div class="eyebrow">What I listen to</div>
+          <div class="channels">
+            <div class="channel"><img src="img/thmanyah.png" alt="Thmanyah logo" width="640" height="640"><div><div class="nm" lang="ar">إذاعة ثمانية</div><div class="hd">@thmanyahPodcasts</div></div></div>
+            <div class="channel"><img src="img/bidon-waraq.png" alt="Bidon Waraq logo" width="640" height="640"><div><div class="nm" lang="ar">بودكاست بدون ورق</div><div class="hd">@BidonWaraq</div></div></div>
+          </div>
+        </div>
+        <div class="col">
+          <div class="eyebrow">Voices I admire</div>
+          <div class="voices">
+            <figure class="voice"><div class="frame tilt"><img src="img/naif-bin-nahar.jpg" alt="Dr. Naif Bin Nahar" width="800" height="1000"></div><figcaption><span class="who">Dr. Naif Bin Nahar</span></figcaption></figure>
+            <figure class="voice"><div class="frame tilt"><img src="img/yasser-alhuzaimi.jpg" alt="Mr. Yasser Alhuzaimi" width="800" height="1000"></div><figcaption><span class="who">Mr. Yasser Alhuzaimi</span></figcaption></figure>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter wide" id="poetry">
+    <div class="inner">
+      <div class="eyebrow">Things I like</div>
+      <div class="thanks"><h2>Arabic Poetry</h2><span class="ar" lang="ar">الشعر العربي</span></div>
+      <div class="poems">
+        <article class="poem" lang="ar">
+          <div class="poet"><span class="ar">صفيّ الدين الحلّي · سَلِ الرِّماحَ العَوالي</span><span class="en" lang="en">Safi al-Din al-Hilli</span></div>
+          <p class="verse"><span>سَلِ الرِّمَاحَ العَوَالِي عَنْ مَعَالِينَا</span><span>وَاسْتَشْهِدِ البِيضَ هَلْ خَابَ الرَّجَا فِينَا</span></p>
+          <p class="verse"><span>لَمَّا سَعَيْنَا فَمَا رَقَّتْ عَزَائِمُنَا</span><span>عَمَّا نَرُومُ وَلَا خَابَتْ مَسَاعِينَا</span></p>
+          <p class="verse"><span>قَوْمٌ إِذَا اسْتُخْصِمُوا كَانُوا فَرَاعِنَةً</span><span>يَوْمًا وَإِنْ حُكِّمُوا كَانُوا مَوَازِينَا</span></p>
+        </article>
+        <article class="poem" lang="ar">
+          <div class="poet"><span class="ar">أبو العلاء المعرّي</span><span class="en" lang="en">Abu al-Ala al-Ma'arri</span></div>
+          <p class="verse"><span>وَإِنّي وَإِن كُنتُ الأَخيرَ زَمانُهُ</span><span>لَآتٍ بِما لَم تَستَطِعهُ الأَوائِلُ</span></p>
+        </article>
+        <article class="poem badr" lang="ar">
+          <img src="img/badr-bin-abdulmohsen.jpg" alt="Prince Badr bin Abdulmohsen, smiling, in black and white" width="640" height="640">
+          <div class="badr-text">
+            <div class="poet"><span class="ar">الأمير بدر بن عبدالمحسن · رديني</span><span class="en" lang="en">Badr bin Abdulmohsen · My favourite poem</span></div>
+            <p class="nabati"><span>كانت السما زرقا داكنه.. ما تغيّرت</span><span>والمباني ساكنه</span></p>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter wide" id="desert">
+    <div class="inner">
+      <div class="eyebrow">Things I love</div>
+      <h2>The Desert</h2>
+      <div class="strip">
+        <figure class="ph tilt"><img src="img/desert-fire.jpg" alt="A fire and dallah coffee pots on the sand at sunset, with camels grazing behind" width="1261" height="2228"></figure>
+        <figure class="ph tilt"><img src="img/desert-camels.jpg" alt="Three camels looking down into the camera" width="1243" height="2243"></figure>
+        <figure class="ph tilt"><img src="img/desert-tent.jpg" alt="A black tent at night, lit by a fire inside" width="1320" height="2316"></figure>
+        <figure class="ph tilt"><img src="img/desert-milk.jpg" alt="A bowl of fresh, frothy camel milk with camels in the background" width="1320" height="1819"></figure>
+        <figure class="ph tilt"><img src="img/desert-danish.jpg" alt="A camel eating a Danish pastry, captioned: Danish. For my Camel." width="1320" height="2329"></figure>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter wide" id="books">
+    <div class="inner">
+      <div class="eyebrow">Things I love</div>
+      <h2>Books</h2>
+      <div class="shelf">
+        <figure class="book"><div class="cover"><img src="img/book-kite-runner.jpg" alt="The Kite Runner by Khaled Hosseini" width="828" height="1207"></div><figcaption>Khaled Hosseini</figcaption></figure>
+        <figure class="book"><div class="cover"><img src="img/book-thousand-suns.jpg" alt="A Thousand Splendid Suns by Khaled Hosseini" width="1047" height="1513"></div><figcaption>Khaled Hosseini</figcaption></figure>
+        <figure class="book"><div class="cover"><img src="img/book-aldaa-waldawaa.jpg" alt="الداء والدواء لابن قيم الجوزية" width="1172" height="2217"></div><figcaption lang="ar">ابن قيّم الجوزية</figcaption></figure>
+        <figure class="book"><div class="cover"><img src="img/book-albidaya.jpg" alt="البداية والنهاية لابن كثير" width="1231" height="1011"></div><figcaption lang="ar">ابن كثير</figcaption></figure>
+        <figure class="book"><div class="cover"><img src="img/book-morrie.jpg" alt="Tuesdays with Morrie by Mitch Albom" width="1254" height="2238"></div><figcaption>Mitch Albom</figcaption></figure>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter wide" id="coding">
+    <div class="inner cert-grid">
+      <div class="cert-text">
+      <div class="eyebrow">Beyond Language</div>
+      <h2>Coding &amp; AI</h2>
+      <hr class="rule">
+      <div class="course"><span class="nm">AI for Coding Training Program</span><span class="by">CODED — Kuwait 2026</span></div>
+      <ol class="skills">
+        <li class="skill"><span class="no">01</span><span class="t">Coding</span><span class="chips"><span>Python</span><span>JavaScript</span><span>C++</span><span>Web Development</span></span></li>
+        <li class="skill"><span class="no">02</span><span class="t">AI Development</span><span class="chips"><span>LLMs</span><span>Prompt Engineering</span><span>AI Agents</span></span></li>
+        <li class="skill"><span class="no">03</span><span class="t">Building &amp; Deployment</span><span class="chips"><span>GitHub</span><span>Supabase</span><span>Vercel</span><span>APIs</span></span></li>
+      </ol>
+      </div>
+      <figure class="cert"><div class="frame tilt"><img src="img/coded-certificate.jpg" alt="Certificate of Completion from CODED awarded to Shaikhah N. Alkhaldi for the AI for Coding Training Program, September 6 to 24, 2026" width="954" height="1372"></div></figure>
+    </div>
+  </section>
+
+  <section class="chapter" id="thanks">
+    <div class="inner">
+      <div class="thanks"><h2>Thank you</h2></div>
+      <hr class="rule">
+    </div>
+  </section>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function () {
+  const root = document.documentElement;
+  const sections = Array.from(document.querySelectorAll('.chapter'));
+  const N_SEC = sections.length;
+  document.getElementById('tot').textContent = String(N_SEC).padStart(2, '0');
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---------- theme ---------- */
+  const darkMQ = matchMedia('(prefers-color-scheme: dark)');
+  try { const saved = localStorage.getItem('sk-theme'); if (saved) root.dataset.theme = saved; } catch (e) {}
+  const isDark = () => root.dataset.theme ? root.dataset.theme === 'dark' : darkMQ.matches;
+  const sun = '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>';
+  const moon = '<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>';
+  let washes = [];
+  function readTheme() {
+    const cs = getComputedStyle(root);
+    washes = sections.map((_, i) => i).map(i => hex(cs.getPropertyValue('--wash-' + i)));
+    const dark = isDark();
+    document.getElementById('themeIcon').innerHTML = dark ? sun : moon;
+    document.getElementById('themeLbl').textContent = dark ? 'Light' : 'Dark';
+    if (mat) {
+      mat.uniforms.uColor.value.set(cs.getPropertyValue('--particle').trim());
+      mat.blending = dark ? THREE.AdditiveBlending : THREE.NormalBlending;
+      mat.uniforms.uDark.value = dark ? 1 : 0;
+      mat.needsUpdate = true;
+    }
+    paintWash();
+  }
+  document.getElementById('themeBtn').addEventListener('click', () => {
+    root.dataset.theme = isDark() ? 'light' : 'dark';
+    try { localStorage.setItem('sk-theme', root.dataset.theme); } catch (e) {}
+    readTheme();
+  });
+  darkMQ.addEventListener('change', readTheme);
+
+  function hex(s) { s = s.trim().replace('#', ''); return [0,2,4].map(i => parseInt(s.slice(i, i + 2), 16)); }
+
+  /* ---------- scroll position ---------- */
+  let secF = 0; // fractional section position
+  function measure() {
+    const y = scrollY;
+    let i = 0;
+    for (let k = 0; k < N_SEC; k++) if (sections[k].offsetTop <= y + 1) i = k;
+    const top = sections[i].offsetTop;
+    const nextTop = i < N_SEC - 1 ? sections[i + 1].offsetTop : top + 1;
+    const span = Math.max(1, nextTop - top - (i < N_SEC - 1 ? 0 : 0));
+    secF = Math.min(N_SEC - 1, i + Math.min(1, (y - top) / Math.min(span, innerHeight)));
+    if (i === N_SEC - 1) secF = N_SEC - 1;
+    const max = document.documentElement.scrollHeight - innerHeight;
+    document.getElementById('bar').style.width = (max > 0 ? (y / max) * 100 : 0) + '%';
+    const cur = Math.min(N_SEC - 1, Math.round(secF));
+    document.getElementById('cur').textContent = String(cur + 1).padStart(2, '0');
+    document.getElementById('prev').disabled = cur === 0;
+    document.getElementById('next').disabled = cur === N_SEC - 1;
+    paintWash();
+  }
+  function paintWash() {
+    if (!washes.length) return;
+    const i = Math.floor(secF), t = secF - i;
+    const L = washes.length - 1, a = washes[Math.min(i, L)], b = washes[Math.min(i + 1, L)];
+    const c = a.map((v, k) => Math.round(v + (b[k] - v) * t));
+    document.getElementById('wash').style.background = `rgb(${c[0]},${c[1]},${c[2]})`;
+  }
+  function go(d) {
+    const cur = Math.min(N_SEC - 1, Math.round(secF));
+    const target = sections[Math.max(0, Math.min(N_SEC - 1, cur + d))];
+    target.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth' });
+  }
+  document.getElementById('prev').addEventListener('click', () => go(-1));
+  document.getElementById('next').addEventListener('click', () => go(1));
+  addEventListener('keydown', e => {
+    if (['ArrowDown', 'PageDown'].includes(e.key)) { e.preventDefault(); go(1); }
+    if (['ArrowUp', 'PageUp'].includes(e.key)) { e.preventDefault(); go(-1); }
+  });
+  if (!reduced) document.querySelectorAll('.tilt').forEach(el => {
+    el.addEventListener('pointermove', e => {
+      const r = el.getBoundingClientRect(), x = (e.clientX - r.left) / r.width - 0.5, y = (e.clientY - r.top) / r.height - 0.5;
+      el.style.transform = `rotateY(${x * 10}deg) rotateX(${-y * 10}deg) translateZ(12px)`;
+    });
+    el.addEventListener('pointerleave', () => { el.style.transform = ''; });
+  });
+  const gal = document.querySelector('.gallery');
+  const lightUp = key => {
+    gal.classList.toggle('focus', !!key);
+    document.querySelectorAll('[data-photo]').forEach(el => el.classList.toggle('on', !!key && el.dataset.photo === key));
+  };
+  document.querySelectorAll('[data-photo]').forEach(el => {
+    el.addEventListener('pointerenter', () => lightUp(el.dataset.photo));
+    el.addEventListener('pointerleave', () => lightUp(null));
+    el.addEventListener('focus', () => lightUp(el.dataset.photo));
+    el.addEventListener('blur', () => lightUp(null));
+  });
+  addEventListener('scroll', measure, { passive: true });
+  addEventListener('resize', measure);
+
+  /* ---------- 3D particles ---------- */
+  let mat = null;
+  if (typeof THREE === 'undefined') { readTheme(); measure(); return; }
+
+  const canvas = document.getElementById('stage');
+  let renderer;
+  try { renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true }); }
+  catch (e) { readTheme(); measure(); return; }
+  renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
+  camera.position.set(0, 0, 8);
+
+  const small = innerWidth < 760;
+  const N = small ? 3200 : 6500;
+  const rnd = (() => { let s = 7; return () => (s = (s * 16807) % 2147483647) / 2147483647; })();
+
+  // Each chapter has its own form, drawn from the subject:
+  // 1 a voice: a sphere rippling like sound, 2 a speech waveform, 3 a globe (the UN),
+  // 4 broadcast rings (radio), 5 a calm galaxy to close.
+  function voiceSphere() {
+    const a = new Float32Array(N * 3);
+    for (let i = 0; i < N; i++) {
+      const u = rnd(), v = rnd();
+      const th = 2 * Math.PI * u, ph = Math.acos(2 * v - 1);
+      let r = 2.1 + 0.28 * Math.sin(6 * th) * Math.sin(5 * ph);
+      if (i % 6 === 0) r = 2.6 + rnd() * 1.6;
+      a.set([r * Math.sin(ph) * Math.cos(th), r * Math.cos(ph), r * Math.sin(ph) * Math.sin(th)], i * 3);
+    }
+    return a;
+  }
+  function waveform() {
+    const a = new Float32Array(N * 3), L = 14;
+    for (let i = 0; i < N; i++) {
+      const k = i % L, x = (rnd() * 2 - 1) * 2.9;
+      const env = Math.exp(-x * x / 3.2);
+      const amp = 0.4 + 1.1 * Math.abs(Math.sin(k * 0.55 + 0.7));
+      const y = env * amp * Math.sin(x * 3.1 + k * 0.45) + (rnd() - 0.5) * 0.06;
+      const z = (k / (L - 1) - 0.5) * 3.2 + (rnd() - 0.5) * 0.05;
+      a.set([x, y, z], i * 3);
+    }
+    return a;
+  }
+  function globe() {
+    const a = new Float32Array(N * 3), R = 2.2;
+    for (let i = 0; i < N; i++) {
+      let lat, lon;
+      const m = rnd();
+      if (m < 0.42) { lat = (Math.floor(rnd() * 11) - 5) * (Math.PI / 12); lon = rnd() * Math.PI * 2; }
+      else if (m < 0.84) { lon = Math.floor(rnd() * 12) * (Math.PI / 6); lat = (rnd() - 0.5) * Math.PI; }
+      else { // orbit ring
+        const t = rnd() * Math.PI * 2, r = 3.1 + (rnd() - 0.5) * 0.12;
+        a.set([r * Math.cos(t), r * Math.sin(t) * 0.18, r * Math.sin(t)], i * 3); continue;
+      }
+      a.set([R * Math.cos(lat) * Math.cos(lon), R * Math.sin(lat), R * Math.cos(lat) * Math.sin(lon)], i * 3);
+    }
+    return a;
+  }
+  function broadcast() {
+    const a = new Float32Array(N * 3), rings = 9;
+    for (let i = 0; i < N; i++) {
+      const k = i % rings, t = rnd() * Math.PI * 2;
+      const r = 0.35 + k * 0.38 + (rnd() - 0.5) * 0.04;
+      const z = (rnd() - 0.5) * 0.12 * (1 + k * 0.2) - k * 0.08;
+      a.set([r * Math.cos(t), r * Math.sin(t), z], i * 3);
+    }
+    return a;
+  }
+  function galaxy() {
+    const a = new Float32Array(N * 3), arms = 3;
+    for (let i = 0; i < N; i++) {
+      const r = Math.pow(rnd(), 0.7) * 3.4, arm = (i % arms) * (2 * Math.PI / arms);
+      const t = arm + r * 1.3 + (rnd() - 0.5) * 0.5 / (0.4 + r * 0.3);
+      a.set([r * Math.cos(t), (rnd() - 0.5) * 0.25 * (3.5 - r) * 0.4, r * Math.sin(t)], i * 3);
+    }
+    return a;
+  }
+  function nightSea() { // "وليلٍ كموجِ البحر": layered swells of a sea at night
+    const a = new Float32Array(N * 3), rows = 18;
+    for (let i = 0; i < N; i++) {
+      const k = i % rows, x = (rnd() * 2 - 1) * 3.6, z = (k / (rows - 1) - 0.5) * 4.2;
+      const y = 0.32 * Math.sin(x * 1.6 + k * 0.7) + 0.16 * Math.sin(x * 3.3 - k * 1.1) - 1.6 + (rnd() - 0.5) * 0.05;
+      a.set([x, y, z], i * 3);
+    }
+    return a;
+  }
+  function dunes() { // rolling sand dunes
+    const a = new Float32Array(N * 3);
+    for (let i = 0; i < N; i++) {
+      const x = (rnd() * 2 - 1) * 4, z = (rnd() * 2 - 1) * 2.4;
+      const y = 0.55 * Math.sin(x * 0.9 + z * 0.6) + 0.25 * Math.sin(x * 2.1 - z * 1.3) - 1.4;
+      a.set([x, y, z], i * 3);
+    }
+    return a;
+  }
+  function openBook() { // two curved pages of an open book
+    const a = new Float32Array(N * 3);
+    for (let i = 0; i < N; i++) {
+      const side = i % 2 ? 1 : -1, u = rnd(), v = rnd();
+      const x = side * (0.08 + u * 2.3), y = (v - 0.5) * 3.0;
+      const z = 0.9 * Math.sin(u * Math.PI * 0.9) - 0.4 * u + (rnd() - 0.5) * 0.03;
+      a.set([x, y, z], i * 3);
+    }
+    return a;
+  }
+  function lattice() { // a cube of points, like a grid of code
+    const a = new Float32Array(N * 3), n = 9, step = 0.5;
+    for (let i = 0; i < N; i++) {
+      const gx = Math.floor(rnd() * n), gy = Math.floor(rnd() * n), gz = Math.floor(rnd() * n);
+      const axis = i % 3, t = (rnd() - 0.5) * step;
+      const p = [(gx - (n - 1) / 2) * step, (gy - (n - 1) / 2) * step, (gz - (n - 1) / 2) * step];
+      if (i % 4 !== 0) p[axis] += t; // points run along the grid lines
+      a.set(p, i * 3);
+    }
+    return a;
+  }
+  const shapes = [voiceSphere(), waveform(), globe(), broadcast(), nightSea(), dunes(), openBook(), lattice(), galaxy()];
+  const rot = [[0.25, 0], [0.35, -0.35], [0.35, 0], [0.15, -0.5], [0.45, 0], [0.35, 0], [-0.5, 0], [0.5, 0.6], [0.9, 0]]; // per-form tilt (x, y)
+
+  const geo = new THREE.BufferGeometry();
+  const from = new THREE.BufferAttribute(shapes[0].slice(), 3);
+  const to = new THREE.BufferAttribute(shapes[1].slice(), 3);
+  const seed = new Float32Array(N); for (let i = 0; i < N; i++) seed[i] = rnd();
+  geo.setAttribute('position', from);
+  geo.setAttribute('aTo', to);
+  geo.setAttribute('aSeed', new THREE.BufferAttribute(seed, 1));
+
+  mat = new THREE.ShaderMaterial({
+    transparent: true, depthWrite: false,
+    uniforms: {
+      uMix: { value: 0 }, uTime: { value: 0 }, uWave: { value: 0 }, uDark: { value: 0 },
+      uSize: { value: small ? 5.0 : 4.4 }, uPR: { value: renderer.getPixelRatio() },
+      uColor: { value: new THREE.Color('#1B2B5C') }, uOpacity: { value: small ? 0.45 : 0.9 }
+    },
+    vertexShader: `
+      attribute vec3 aTo; attribute float aSeed;
+      uniform float uMix, uTime, uSize, uPR, uWave, uDark;
+      varying float vA;
+      void main() {
+        float m = smoothstep(0.0, 1.0, clamp(uMix * 1.25 - aSeed * 0.25, 0.0, 1.0));
+        vec3 p = mix(position, aTo, m);
+        p += 0.045 * vec3(sin(uTime * .7 + aSeed * 40.), cos(uTime * .6 + aSeed * 23.), sin(uTime * .5 + aSeed * 61.));
+        p.y += uWave * 0.22 * sin(p.x * 2.0 - uTime * 1.6 + p.z * 0.8);
+        vec4 mv = modelViewMatrix * vec4(p, 1.0);
+        float s = mix(1.15, 0.85, uDark);
+        gl_PointSize = uSize * s * uPR * (0.55 + aSeed * 0.9) * (8.0 / -mv.z);
+        gl_Position = projectionMatrix * mv;
+        vA = 0.45 + 0.55 * fract(aSeed * 7.13);
+      }`,
+    fragmentShader: `
+      uniform vec3 uColor; uniform float uOpacity;
+      varying float vA;
+      void main() {
+        float d = length(gl_PointCoord - 0.5);
+        if (d > 0.5) discard;
+        gl_FragColor = vec4(uColor, smoothstep(0.5, 0.12, d) * vA * uOpacity);
+      }`
+  });
+  const points = new THREE.Points(geo, mat);
+  const group = new THREE.Group();
+  const spin = new THREE.Group();
+  spin.add(points); group.add(spin); scene.add(group);
+
+  function resize() {
+    const w = innerWidth, h = innerHeight;
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h; camera.updateProjectionMatrix();
+    const wideScreen = w > 900;
+    group.position.x = wideScreen ? 2.4 : 0.6;
+    group.position.y = wideScreen ? 0 : -0.6;
+    group.scale.setScalar(wideScreen ? 1 : 0.8);
+    baseOpacity = wideScreen ? 0.9 : 0.3;
+  }
+  let baseOpacity = 0.9;
+  addEventListener('resize', resize);
+
+  let pair = -1;
+  function setPair(i) {
+    if (i === pair) return; pair = i;
+    from.array.set(shapes[i]); from.needsUpdate = true;
+    to.array.set(shapes[Math.min(i + 1, shapes.length - 1)]); to.needsUpdate = true;
+  }
+
+  let mx = 0, my = 0;
+  addEventListener('pointermove', e => { mx = e.clientX / innerWidth - 0.5; my = e.clientY / innerHeight - 0.5; }, { passive: true });
+
+  const clock = new THREE.Clock();
+  let ang = 0;
+  function frame() {
+    const dt = Math.min(clock.getDelta(), 0.05), t = clock.elapsedTime;
+    const i = Math.min(Math.floor(secF), shapes.length - 2);
+    const f = Math.min(1, secF - i);
+    setPair(i);
+    mat.uniforms.uMix.value = f;
+    mat.uniforms.uTime.value = reduced ? 0 : t;
+    // wave motion is strongest on the waveform chapter
+    // fade the particles behind the photos on the Aims and Podcasts chapters
+    const near = Math.max(0, 1 - Math.abs(secF - 2), 1 - Math.abs(secF - 3), 1 - Math.abs(secF - 4), 1 - Math.abs(secF - 5), 1 - Math.abs(secF - 6), 1 - Math.abs(secF - 7));
+    mat.uniforms.uOpacity.value = baseOpacity * (1 - 0.6 * near);
+    mat.uniforms.uWave.value = Math.max(0, 1 - Math.abs(secF - 1) * 1.4, 0.8 * (1 - Math.abs(secF - 4) * 1.4));
+    if (!reduced) ang += dt * 0.12;
+    const a = rot[i], b = rot[Math.min(i + 1, rot.length - 1)];
+    spin.rotation.x = a[0] + (b[0] - a[0]) * f;
+    spin.rotation.z = a[1] + (b[1] - a[1]) * f;
+    points.rotation.y = ang + secF * 0.6;
+    group.rotation.y += ((mx * 0.35) - group.rotation.y) * 0.05;
+    group.rotation.x += ((my * 0.2) - group.rotation.x) * 0.05;
+    renderer.render(scene, camera);
+    requestAnimationFrame(frame);
+  }
+
+  readTheme(); resize(); measure(); requestAnimationFrame(frame);
+})();
+</script>
+
+</body>
+</html>
