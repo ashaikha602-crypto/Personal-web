@@ -131,9 +131,10 @@ h2 { font-size: clamp(52px, 7.5vw, 96px); line-height: 1; }
 
 /* desert */
 #desert .inner { max-width: 1240px; gap: 26px; }
-.strip { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 18px; align-items: end; perspective: 1200px; }
-.strip .ph { border: 0; box-shadow: none; overflow: visible; display: flex; justify-content: center; align-items: flex-end; height: clamp(220px, 46vh, 380px); }
-.strip .ph img { width: auto; height: auto; max-width: 100%; max-height: 100%; object-fit: contain; border: 1px solid var(--line); box-shadow: 0 22px 40px -26px rgba(10,15,30,.7); }
+#desert .inner { max-width: 1440px; }
+.strip { display: flex; gap: 14px; align-items: flex-end; perspective: 1200px; }
+.strip .ph { border: 0; box-shadow: none; overflow: visible; flex: var(--ar) 1 0; min-width: 0; }
+.strip .ph img, .strip .ph video { display: block; width: 100%; height: auto; border: 1px solid var(--line); box-shadow: 0 22px 40px -26px rgba(10,15,30,.7); }
 
 /* books */
 #books .inner { max-width: 1240px; gap: 26px; }
@@ -217,8 +218,8 @@ h2 { font-size: clamp(52px, 7.5vw, 96px); line-height: 1; }
   .opinion-grid { grid-template-columns: 1fr; row-gap: 28px; }
   .pics { gap: 10px; }
   .pics .solo img { max-height: 420px; }
-  .strip { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
-  .strip .ph { height: 190px; }
+  .strip { flex-wrap: wrap; gap: 10px; }
+  .strip .ph { flex-basis: calc((100% - 20px) / 3 - 1px); flex-grow: 0; }
   .shelf { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px 10px; }
   .book .cover { height: 150px; }
   .book figcaption, .book figcaption[lang="ar"] { font-size: 13px; }
@@ -376,11 +377,12 @@ h2 { font-size: clamp(52px, 7.5vw, 96px); line-height: 1; }
       <div class="eyebrow">Things I love</div>
       <h2>The Desert</h2>
       <div class="strip">
-        <figure class="ph tilt"><img src="img/desert-fire.jpg" alt="A fire and dallah coffee pots on the sand at sunset, with camels grazing behind" width="1261" height="2228"></figure>
-        <figure class="ph tilt"><img src="img/desert-camels.jpg" alt="Three camels looking down into the camera" width="1243" height="2243"></figure>
-        <figure class="ph tilt"><img src="img/desert-tent.jpg" alt="A black tent at night, lit by a fire inside" width="1320" height="2316"></figure>
-        <figure class="ph tilt"><img src="img/desert-milk.jpg" alt="A bowl of fresh, frothy camel milk with camels in the background" width="1320" height="1819"></figure>
-        <figure class="ph tilt"><img src="img/desert-danish.jpg" alt="A camel eating a Danish pastry, captioned: Danish. For my Camel." width="1320" height="2329"></figure>
+        <figure class="ph tilt" style="--ar: 0.566"><img src="img/desert-fire.jpg" alt="A fire and dallah coffee pots on the sand at sunset, with camels grazing behind" width="1261" height="2228"></figure>
+        <figure class="ph tilt" style="--ar: 0.554"><img src="img/desert-camels.jpg" alt="Three camels looking down into the camera" width="1243" height="2243"></figure>
+        <figure class="ph tilt" style="--ar: 0.570"><img src="img/desert-tent.jpg" alt="A black tent at night, lit by a fire inside" width="1320" height="2316"></figure>
+        <figure class="ph tilt" style="--ar: 0.726"><img src="img/desert-milk.jpg" alt="A bowl of fresh, frothy camel milk with camels in the background" width="1320" height="1819"></figure>
+        <figure class="ph tilt" style="--ar: 0.567"><img src="img/desert-danish.jpg" alt="A camel eating a Danish pastry, captioned: Danish. For my Camel." width="1320" height="2329"></figure>
+        <figure class="ph clip" style="--ar: 0.5625"><video src="media/desert.mp4" poster="img/desert-video-poster.jpg" width="576" height="1024" muted loop playsinline preload="auto" aria-label="Video from the desert"></video></figure>
       </div>
     </div>
   </section>
@@ -522,6 +524,7 @@ h2 { font-size: clamp(52px, 7.5vw, 96px); line-height: 1; }
       el.setAttribute('aria-hidden', k === n ? 'false' : 'true');
     });
     sections[n].scrollTop = 0;
+    document.querySelectorAll('video').forEach(v => { if (sections[n].contains(v)) { const p = v.play(); if (p) p.catch(() => {}); } else v.pause(); });
     cur = n;
     document.getElementById('cur').textContent = String(cur + 1).padStart(2, '0');
     document.getElementById('prev').disabled = cur === 0;
