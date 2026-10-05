@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Hanken+Grotesk:wght@400;500;600;700&family=Amiri:wght@400;700&family=Gentium+Book+Plus:wght@400&display=swap">
 <style>
-/* Layout: full-screen chapters you scroll through; text on the left, a 3D particle form on the right that reshapes per chapter. Ink on ivory by default, starfield at night. */
+/* Layout: full-screen slides that change like a presentation; text on the left, a 3D particle form on the right that reshapes per chapter. Ink on ivory by default, starfield at night. */
 :root {
   --bg: #F4EFE4;          /* ivory paper */
   --ink: #16213E;         /* deep navy ink: headings + particles */
@@ -40,7 +40,7 @@
   color-scheme: dark;
 }
 
-html { scroll-snap-type: y proximity; scroll-behavior: smooth; }
+html, body { height: 100%; overflow: hidden; overscroll-behavior: none; }
 body { background: var(--bg); color: var(--text); font-family: var(--font-body); font-size: 18px; line-height: 1.55; -webkit-font-smoothing: antialiased; }
 #wash { position: fixed; inset: 0; z-index: 0; background: var(--bg); }
 #stage { position: fixed; inset: 0; z-index: 1; width: 100%; height: 100%; display: block; pointer-events: none; }
@@ -60,8 +60,17 @@ body { background: var(--bg); color: var(--text); font-family: var(--font-body);
 button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 
 /* chapters */
-main { position: relative; z-index: 2; }
-.chapter { min-height: 100vh; min-height: 100svh; scroll-snap-align: start; display: flex; align-items: center; padding-inline: clamp(20px, 8vw, 120px); padding-block: 96px; box-sizing: border-box; }
+main { position: fixed; inset: 0; z-index: 2; }
+.chapter { position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; display: flex; align-items: center; padding-inline: clamp(20px, 8vw, 120px); padding-block: 96px; box-sizing: border-box;
+  opacity: 0; visibility: hidden; transform: translateY(48px) scale(.985); transition: opacity .7s ease, transform .8s cubic-bezier(.2,.7,.2,1), visibility 0s linear .8s; }
+.chapter.active { opacity: 1; visibility: visible; transform: none; transition: opacity .7s ease .15s, transform .8s cubic-bezier(.2,.7,.2,1) .15s, visibility 0s; }
+.chapter.above { transform: translateY(-48px) scale(.985); }
+.chapter > .inner { margin-block: auto; }
+.chapter .inner > * { transition: opacity .7s ease, transform .8s cubic-bezier(.2,.7,.2,1); }
+.chapter:not(.active) .inner > * { opacity: 0; transform: translateY(18px); }
+.chapter.active .inner > *:nth-child(2) { transition-delay: .25s; }
+.chapter.active .inner > *:nth-child(3) { transition-delay: .35s; }
+.chapter.active .inner > *:nth-child(n+4) { transition-delay: .45s; }
 .inner { width: 100%; max-width: 640px; min-width: 0; display: grid; gap: 28px; }
 .wide .inner { max-width: 1080px; }
 .eyebrow { font: 700 13px/1 var(--font-body); letter-spacing: .28em; text-transform: uppercase; color: var(--accent); }
@@ -199,6 +208,7 @@ h2 { font-size: clamp(52px, 7.5vw, 96px); line-height: 1; }
 @media (max-width: 760px) {
   body { font-size: 17px; }
   .chapter { padding-block: 88px 120px; align-items: flex-start; }
+  .chapter > .inner { margin-block: 0; }
   .split { grid-template-columns: 1fr; }
   .principles-grid { grid-template-columns: 1fr; gap: 14px; }
   .carving { justify-self: center; }
@@ -229,7 +239,7 @@ h2 { font-size: clamp(52px, 7.5vw, 96px); line-height: 1; }
   .nav { right: 14px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  html { scroll-behavior: auto; }
+  .chapter, .chapter.active, .chapter .inner > * { transition: none !important; transform: none !important; }
   .hint::before { animation: none; }
 }
 </style>
@@ -258,7 +268,7 @@ h2 { font-size: clamp(52px, 7.5vw, 96px); line-height: 1; }
   <section class="chapter" id="home">
     <div class="inner">
       <h1>Shaikha<br>Al-Khaldi</h1>
-      <div class="hint">Scroll</div>
+      <div class="hint">Use the arrows</div>
     </div>
   </section>
 
@@ -501,24 +511,32 @@ h2 { font-size: clamp(52px, 7.5vw, 96px); line-height: 1; }
 
   function hex(s) { s = s.trim().replace('#', ''); return [0,2,4].map(i => parseInt(s.slice(i, i + 2), 16)); }
 
-  /* ---------- scroll position ---------- */
-  let secF = 0; // fractional section position
-  function measure() {
-    const y = scrollY;
-    let i = 0;
-    for (let k = 0; k < N_SEC; k++) if (sections[k].offsetTop <= y + 1) i = k;
-    const top = sections[i].offsetTop;
-    const nextTop = i < N_SEC - 1 ? sections[i + 1].offsetTop : top + 1;
-    const span = Math.max(1, nextTop - top - (i < N_SEC - 1 ? 0 : 0));
-    secF = Math.min(N_SEC - 1, i + Math.min(1, (y - top) / Math.min(span, innerHeight)));
-    if (i === N_SEC - 1) secF = N_SEC - 1;
-    const max = document.documentElement.scrollHeight - innerHeight;
-    document.getElementById('bar').style.width = (max > 0 ? (y / max) * 100 : 0) + '%';
-    const cur = Math.min(N_SEC - 1, Math.round(secF));
+  /* ---------- slides ---------- */
+  let cur = 0, secF = 0, lastNav = 0;
+  const bar = document.getElementById('bar');
+  function show(n) {
+    n = Math.max(0, Math.min(N_SEC - 1, n));
+    if (n === cur && sections[n].classList.contains('active')) return;
+    sections.forEach((el, k) => {
+      el.classList.toggle('active', k === n);
+      el.classList.toggle('above', k < n);
+      el.setAttribute('aria-hidden', k === n ? 'false' : 'true');
+    });
+    sections[n].scrollTop = 0;
+    cur = n;
     document.getElementById('cur').textContent = String(cur + 1).padStart(2, '0');
     document.getElementById('prev').disabled = cur === 0;
     document.getElementById('next').disabled = cur === N_SEC - 1;
+    bar.style.width = (N_SEC > 1 ? cur / (N_SEC - 1) * 100 : 0) + '%';
+    lastNav = performance.now();
+  }
+  function go(d) { show(cur + d); }
+  // glide the background colour and 3D shape toward the current slide
+  function glide() {
+    const d = cur - secF;
+    secF = Math.abs(d) < 0.001 ? cur : secF + d * (reduced ? 1 : 0.06);
     paintWash();
+    requestAnimationFrame(glide);
   }
   function paintWash() {
     if (!washes.length) return;
@@ -527,17 +545,38 @@ h2 { font-size: clamp(52px, 7.5vw, 96px); line-height: 1; }
     const c = a.map((v, k) => Math.round(v + (b[k] - v) * t));
     document.getElementById('wash').style.background = `rgb(${c[0]},${c[1]},${c[2]})`;
   }
-  function go(d) {
-    const cur = Math.min(N_SEC - 1, Math.round(secF));
-    const target = sections[Math.max(0, Math.min(N_SEC - 1, cur + d))];
-    target.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth' });
-  }
+  const busy = () => performance.now() - lastNav < 900;
+  const atTop = el => el.scrollTop <= 1;
+  const atBottom = el => el.scrollTop + el.clientHeight >= el.scrollHeight - 1;
   document.getElementById('prev').addEventListener('click', () => go(-1));
   document.getElementById('next').addEventListener('click', () => go(1));
   addEventListener('keydown', e => {
-    if (['ArrowDown', 'PageDown'].includes(e.key)) { e.preventDefault(); go(1); }
-    if (['ArrowUp', 'PageUp'].includes(e.key)) { e.preventDefault(); go(-1); }
+    if (['ArrowDown', 'ArrowRight', 'PageDown', ' ', 'Enter'].includes(e.key) && !e.target.closest('button')) { e.preventDefault(); go(1); }
+    if (['ArrowUp', 'ArrowLeft', 'PageUp', 'Backspace'].includes(e.key)) { e.preventDefault(); go(-1); }
+    if (e.key === 'Home') { e.preventDefault(); show(0); }
+    if (e.key === 'End') { e.preventDefault(); show(N_SEC - 1); }
   });
+  // mouse wheel / trackpad: one slide per gesture, after the slide's own content has been scrolled
+  addEventListener('wheel', e => {
+    const el = sections[cur];
+    if (Math.abs(e.deltaY) < 8 || busy()) return;
+    if (e.deltaY > 0 && atBottom(el)) go(1);
+    else if (e.deltaY < 0 && atTop(el)) go(-1);
+  }, { passive: true });
+  // touch: swipe up/down or left/right
+  let tx = 0, ty = 0, tTop = true, tBottom = true;
+  addEventListener('touchstart', e => {
+    const t = e.touches[0]; tx = t.clientX; ty = t.clientY;
+    tTop = atTop(sections[cur]); tBottom = atBottom(sections[cur]);
+  }, { passive: true });
+  addEventListener('touchend', e => {
+    const t = e.changedTouches[0], dx = t.clientX - tx, dy = t.clientY - ty;
+    if (busy()) return;
+    if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) { go(dx < 0 ? 1 : -1); return; }
+    if (dy < -60 && tBottom && atBottom(sections[cur])) go(1);
+    else if (dy > 60 && tTop && atTop(sections[cur])) go(-1);
+  }, { passive: true });
+  function measure() {}
   if (!reduced) document.querySelectorAll('.tilt').forEach(el => {
     el.addEventListener('pointermove', e => {
       const r = el.getBoundingClientRect(), x = (e.clientX - r.left) / r.width - 0.5, y = (e.clientY - r.top) / r.height - 0.5;
@@ -556,8 +595,7 @@ h2 { font-size: clamp(52px, 7.5vw, 96px); line-height: 1; }
     el.addEventListener('focus', () => lightUp(el.dataset.photo));
     el.addEventListener('blur', () => lightUp(null));
   });
-  addEventListener('scroll', measure, { passive: true });
-  addEventListener('resize', measure);
+  show(0); requestAnimationFrame(glide);
 
   /* ---------- 3D particles ---------- */
   let mat = null;
